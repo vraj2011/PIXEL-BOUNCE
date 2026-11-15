@@ -1,0 +1,162 @@
+body{
+    margin:0;
+    background:#10121c;
+    font-family:'Press Start 2P',monospace;
+    color:#10121c;
+}
+
+img{
+    image-rendering:pixelated;
+}
+
+.menu{
+    position:relative;
+    min-height:100vh;
+    box-sizing:border-box;
+    padding:48px 24px 140px;
+    background:#8fd3ff;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    overflow:hidden;
+}
+
+.menu::after{
+    content:'';
+    position:absolute;
+    left:0;
+    right:0;
+    bottom:0;
+    height:96px;
+    background:url(art/ground.png) repeat-x 0 0/96px 48px,#4c3533;
+}
+
+.cl{
+    position:absolute;
+}
+
+.c1{
+    top:32px;
+    left:6%;
+    width:90px;
+}
+
+.c2{
+    top:110px;
+    right:8%;
+    width:117px;
+}
+
+.ball{
+    width:64px;
+    animation:bnc .7s steps(6) infinite alternate;
+}
+
+@keyframes bnc{
+    to{transform:translateY(-40px)}
+}
+
+.title{
+    margin:32px 0 16px;
+    font-size:32px;
+    color:#eb2a3f;
+    text-shadow:4px 4px 0 #10121c;
+    text-align:center;
+}
+
+.sub{
+    margin:0 0 48px;
+    font-size:16px;
+}
+
+.cards{
+    display:grid;
+    grid-template-columns:repeat(4,200px);
+    gap:24px;
+    position:relative;
+    z-index:1;
+}
+
+.card{
+    padding:16px;
+    border:4px solid #10121c;
+    background:#fffffe;
+    box-shadow:6px 6px 0 #10121c;
+    font:inherit;
+    color:inherit;
+    text-align:left;
+    cursor:pointer;
+}
+
+.card:not(:disabled):hover{
+    transform:translate(-2px,-2px);
+    box-shadow:8px 8px 0 #10121c;
+}
+
+.card:not(:disabled):active{
+    transform:translate(6px,6px);
+    box-shadow:0 0 0 #10121c;
+}
+
+.card:disabled{
+    background:#9aa0b4;
+    cursor:not-allowed;
+}
+
+.num{
+    font-size:8px;
+    color:#4c3533;
+}
+
+.name{
+    margin:16px 0;
+    font-size:16px;
+    line-height:24px;
+}
+
+.coins{
+    font-size:8px;
+}
+
+.keys{
+    margin-top:40px;
+    font-size:8px;
+    position:relative;
+    z-index:1;
+}
+
+.game{
+    display:none;
+    min-height:100vh;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+}
+
+canvas{
+    box-sizing:border-box;
+    width:min(100vw,calc((100vh - 40px)*16/9));
+    background:#8fd3ff;
+    border:4px solid #000;
+    image-rendering:pixelated;
+}
+
+.hint{
+    margin-top:8px;
+    font-size:8px;
+    color:#8fd3ff;
+}
+
+.play .menu{
+    display:none;
+}
+
+.play .game{
+    display:flex;
+}
+
+@media(max-width:1000px){
+    .cards{
+        grid-template-columns:repeat(2,200px);
+    }
+}

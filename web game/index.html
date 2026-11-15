@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>PIXEL BOUNCE</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="menu">
+  <img class="cl c1" src="art/cloud1.png">
+  <img class="cl c2" src="art/cloud3.png">
+  <img class="ball" src="art/ball_up.png">
+  <h1 class="title">PIXEL BOUNCE</h1>
+  <p class="sub">FALLING IS HOW YOU WIN</p>
+  <div class="cards">
+    <button class="card">
+      <div class="num">LEVEL 1</div>
+      <div class="name">FALL UP</div>
+      <div class="coins">COINS 0/3</div>
+    </button>
+    <button class="card" disabled>
+      <div class="num">LEVEL 2</div>
+      <div class="name">???</div>
+      <div class="coins">LOCKED</div>
+    </button>
+    <button class="card" disabled>
+      <div class="num">LEVEL 3</div>
+      <div class="name">???</div>
+      <div class="coins">LOCKED</div>
+    </button>
+    <button class="card" disabled>
+      <div class="num">LEVEL 4</div>
+      <div class="name">???</div>
+      <div class="coins">LOCKED</div>
+    </button>
+  </div>
+  <div class="keys">ARROWS / WASD MOVE - SPACE OR W JUMPS - ESC = MENU</div>
+</div>
+
+<div class="game">
+  <canvas id="c" width="960" height="540"></canvas>
+  <div class="hint">ARROWS / WASD MOVE - SPACE OR W JUMPS - R RESTARTS - ESC = MENU</div>
+</div>
+
+<script src="main.js"></script>
+<script>
+const best=JSON.parse(localStorage.getItem('pb')||'[]');
+const cards=document.querySelectorAll('.card');
+let cur=0;
+
+function show(){
+  cards.forEach((c,i)=>{
+    if(!c.disabled)c.querySelector('.coins').textContent='COINS '+(best[i]||0)+'/3';
+  });
+}
+
+cards.forEach((c,i)=>c.onclick=()=>{
+  cur=i;
+  newGame();
+  document.body.classList.add('play');
+});
+
+addEventListener('keydown',e=>{
+  if(e.code==='Escape'){
+    document.body.classList.remove('play');
+    show();
+  }
+});
+
+function onWin(s){
+  best[cur]=Math.max(best[cur]||0,s);
+  localStorage.setItem('pb',JSON.stringify(best));
+}
+
+show();
+</script>
+</body>
+</html>
