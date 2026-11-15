@@ -1,0 +1,48 @@
+[gd_scene format=3 uid="uid://fheqe2ocdirg"]
+
+[ext_resource type="Texture2D" uid="uid://chq1r632b24r5" path="res://Assets/ground.png" id="1_6phgx"]
+[ext_resource type="Script" uid="uid://bf2mpkl3e05ih" path="res://Scripts/player.gd" id="2_81xng"]
+[ext_resource type="Texture2D" uid="uid://cx3v4r2w4liqp" path="res://Assets/ball_calm.png" id="3_wqkje"]
+
+[sub_resource type="AtlasTexture" id="AtlasTexture_vkdpk"]
+atlas = ExtResource("1_6phgx")
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_wp5od"]
+size = Vector2(382, 30)
+
+[sub_resource type="CircleShape2D" id="CircleShape2D_vkdpk"]
+radius = 20.09975
+
+[node name="Level" type="Node2D" unique_id=820190324]
+
+[node name="LeftPlatform" type="StaticBody2D" parent="." unique_id=1667139867]
+position = Vector2(0, 400)
+
+[node name="TextureRect" type="TextureRect" parent="LeftPlatform" unique_id=1970952184]
+offset_right = 128.0
+offset_bottom = 32.0
+scale = Vector2(3, 3)
+texture = SubResource("AtlasTexture_vkdpk")
+expand_mode = 1
+stretch_mode = 1
+
+[node name="StaticBody2D" type="StaticBody2D" parent="." unique_id=644985367]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="StaticBody2D" unique_id=574594368]
+position = Vector2(192, 474)
+shape = SubResource("RectangleShape2D_wp5od")
+
+[node name="Player" type="CharacterBody2D" parent="." unique_id=159905797]
+script = ExtResource("2_81xng")
+
+[node name="Sprite2D" type="Sprite2D" parent="Player" unique_id=2041395252]
+position = Vector2(57, 416.00003)
+scale = Vector2(3, 3)
+texture = ExtResource("3_wqkje")
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Player" unique_id=1940289993]
+position = Vector2(57, 416)
+shape = SubResource("CircleShape2D_vkdpk")
+
+[node name="Camera2D" type="Camera2D" parent="Player" unique_id=1817792450]
+position = Vector2(57, 416)
