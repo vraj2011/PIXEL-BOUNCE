@@ -14,55 +14,41 @@
   <img class="ball" src="art/ball_up.png">
   <h1 class="title">PIXEL BOUNCE</h1>
   <p class="sub">FALLING IS HOW YOU WIN</p>
-  <div class="cards">
-    <button class="card">
-      <div class="num">LEVEL 1</div>
-      <div class="name">FALL UP</div>
-      <div class="coins">COINS 0/3</div>
-    </button>
-    <button class="card" disabled>
-      <div class="num">LEVEL 2</div>
-      <div class="name">???</div>
-      <div class="coins">LOCKED</div>
-    </button>
-    <button class="card" disabled>
-      <div class="num">LEVEL 3</div>
-      <div class="name">???</div>
-      <div class="coins">LOCKED</div>
-    </button>
-    <button class="card" disabled>
-      <div class="num">LEVEL 4</div>
-      <div class="name">???</div>
-      <div class="coins">LOCKED</div>
-    </button>
-  </div>
-  <div class="hint">WASD / ARROWS - SPACE JUMP - M MUTE - R RESTART - ESC MENU</div>
-  <div class="keys">ARROWS / WASD MOVE - SPACE OR W JUMPS - ESC = MENU</div>
+  <div class="cards"></div>
+  <div class="keys">ARROWS / WASD MOVE - SPACE OR W JUMPS - M = MUTE - ESC = MENU</div>
 </div>
 
 <div class="game">
   <canvas id="c" width="960" height="540"></canvas>
-  <div class="hint">ARROWS / WASD MOVE - SPACE OR W JUMPS - R RESTARTS - ESC = MENU</div>
+  <div class="hint">WASD / ARROWS - SPACE JUMP - M MUTE - R RESTART - ESC MENU</div>
 </div>
 
 <script src="main.js"></script>
 <script>
 const best=JSON.parse(localStorage.getItem('pb')||'[]');
+const box=document.querySelector('.cards');
+
+levels.forEach((L,i)=>{
+    const b=document.createElement('button');
+    b.className='card';
+    b.innerHTML='<div class="num">LEVEL '+(i+1)+'</div><div class="name"></div><div class="coins"></div>';
+    b.onclick=()=>{
+        newGame(i);
+        document.body.classList.add('play');
+    };
+    box.appendChild(b);
+});
+
 const cards=document.querySelectorAll('.card');
 
 function show(){
     cards.forEach((c,i)=>{
-        const ok=i<levels.length&&(i===0||best[i-1]!=null);
+        const ok=i===0||best[i-1]!=null;
         c.disabled=!ok;
         c.querySelector('.name').textContent=ok?levels[i].name:'???';
         c.querySelector('.coins').textContent=ok?'COINS '+(best[i]||0)+'/'+levels[i].coins.length:'LOCKED';
     });
 }
-
-cards.forEach((c,i)=>c.onclick=()=>{
-    newGame(i);
-    document.body.classList.add('play');
-});
 
 addEventListener('keydown',e=>{
     if(e.code==='Escape'){
