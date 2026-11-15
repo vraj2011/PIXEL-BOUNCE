@@ -48,30 +48,31 @@
 <script>
 const best=JSON.parse(localStorage.getItem('pb')||'[]');
 const cards=document.querySelectorAll('.card');
-let cur=0;
 
 function show(){
-  cards.forEach((c,i)=>{
-    if(!c.disabled)c.querySelector('.coins').textContent='COINS '+(best[i]||0)+'/3';
-  });
+    cards.forEach((c,i)=>{
+        const ok=i<levels.length&&(i===0||best[i-1]!=null);
+        c.disabled=!ok;
+        c.querySelector('.name').textContent=ok?levels[i].name:'???';
+        c.querySelector('.coins').textContent=ok?'COINS '+(best[i]||0)+'/'+levels[i].coins.length:'LOCKED';
+    });
 }
 
 cards.forEach((c,i)=>c.onclick=()=>{
-  cur=i;
-  newGame();
-  document.body.classList.add('play');
+    newGame(i);
+    document.body.classList.add('play');
 });
 
 addEventListener('keydown',e=>{
-  if(e.code==='Escape'){
-    document.body.classList.remove('play');
-    show();
-  }
+    if(e.code==='Escape'){
+        document.body.classList.remove('play');
+        show();
+    }
 });
 
 function onWin(s){
-  best[cur]=Math.max(best[cur]||0,s);
-  localStorage.setItem('pb',JSON.stringify(best));
+    best[lvl]=Math.max(best[lvl]||0,s);
+    localStorage.setItem('pb',JSON.stringify(best));
 }
 
 show();
