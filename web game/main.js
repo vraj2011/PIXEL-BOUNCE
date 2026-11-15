@@ -11,10 +11,50 @@ const img={};
     img[n].src='art/'+n+'.png';
 });
 
+let ac=null;
+let muted=false;
+
+function tone(f1,f2,dur,type,vol){
+    if(muted)return;
+    if(!ac)ac=new AudioContext();
+    if(ac.state==='suspended')ac.resume();
+    const o=ac.createOscillator();
+    const v=ac.createGain();
+    o.type=type;
+    o.frequency.setValueAtTime(f1,ac.currentTime);
+    o.frequency.exponentialRampToValueAtTime(f2,ac.currentTime+dur);
+    v.gain.setValueAtTime(vol,ac.currentTime);
+    v.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+dur);
+    o.connect(v);
+    v.connect(ac.destination);
+    o.start();
+    o.stop(ac.currentTime+dur);
+}
+
+const sfx={
+    jump(){
+        tone(300,600,0.12,'square',0.06);
+    },
+    bounce(){
+        tone(150,700,0.25,'square',0.08);
+    },
+    coin(){
+        tone(900,1400,0.1,'square',0.05);
+        setTimeout(()=>tone(1400,1800,0.12,'square',0.05),80);
+    },
+    hurt(){
+        tone(300,60,0.3,'sawtooth',0.08);
+    },
+    win(){
+        [523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,f,0.18,'square',0.06),i*130));
+    }
+};
+
 const keys={};
 addEventListener('keydown',e=>{
     keys[e.code]=true;
     if(e.code==='Space')e.preventDefault();
+    if(e.code==='KeyM')muted=!muted;
 });
 addEventListener('keyup',e=>keys[e.code]=false);
 
@@ -69,6 +109,11 @@ function reset(){
     p.vy=0;
 }
 
+function die(){
+    sfx.hurt();
+    reset();
+}
+
 newGame(0);
 
 function update(dt){
@@ -80,7 +125,10 @@ function update(dt){
         }
     }
 
-    if((keys.Space||keys.KeyW||keys.ArrowUp)&&p.on)p.vy=JUMP;
+    if((keys.Space||keys.KeyW||keys.ArrowUp)&&p.on){
+        p.vy=JUMP;
+        sfx.jump();
+    }
     p.vy+=GRAV*dt;
     const prev=p.y+p.h;
     p.y+=p.vy*dt;
@@ -100,23 +148,26 @@ function update(dt){
         if(p.vy>0&&prev<=my&&bot>=my&&p.x+p.w>tp.x+24&&p.x<tp.x+117){
             p.vy=-Math.min(Math.max(p.vy*1.5,600),1100);
             p.sq=0.12;
+            sfx.bounce();
         }
     }
 
     for(const s of spikes){
-        if(p.x+8<s.x+36&&p.x+40>s.x+10&&p.y+8<s.y+38&&p.y+40>s.y+14)reset();
+        if(p.x+8<s.x+36&&p.x+40>s.x+10&&p.y+8<s.y+38&&p.y+40>s.y+14)die();
     }
     for(const c of coins){
         if(!c.got&&Math.hypot(p.x+24-c.x,p.y+24-c.y)<40){
             c.got=true;
             score++;
+            sfx.coin();
         }
     }
     if(p.x+p.w>890&&p.y+p.h>goal.y){
         won=true;
+        sfx.win();
         onWin(score);
     }
-    if(p.y>700)reset();
+    if(p.y>700)die();
 }
 
 function draw(t){
@@ -153,6 +204,7 @@ function draw(t){
     g.font='16px "Press Start 2P"';
     g.fillStyle='#10121c';
     g.fillText('COINS '+score+'/'+coins.length,16,36);
+    if(muted)g.fillText('MUTED',16,64);
     if(won){
         g.fillStyle='rgba(0,0,0,0.6)';
         g.fillRect(0,0,960,540);
@@ -165,6 +217,25 @@ function draw(t){
         g.fillText(lvl+1<levels.length?'N = NEXT   R = AGAIN   ESC = MENU':'R = AGAIN   ESC = MENU',480,340);
         g.textAlign='left';
     }
+}
+
+const VOL=5;
+
+function tone(f1,f2,dur,type,vol){
+    if(muted)return;
+    if(!ac)ac=new AudioContext();
+    if(ac.state==='suspended')ac.resume();
+    const o=ac.createOscillator();
+    const v=ac.createGain();
+    o.type=type;
+    o.frequency.setValueAtTime(f1,ac.currentTime);
+    o.frequency.exponentialRampToValueAtTime(f2,ac.currentTime+dur);
+    v.gain.setValueAtTime(Math.min(vol*VOL,1),ac.currentTime);
+    v.gain.exponentialRampToValueAtTime(0.001,ac.currentTime+dur);
+    o.connect(v);
+    v.connect(ac.destination);
+    o.start();
+    o.stop(ac.currentTime+dur);
 }
 
 let last=0;
