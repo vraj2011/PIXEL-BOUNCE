@@ -1,4 +1,3 @@
-
 document.fonts.load('16px "Press Start 2P"');
 document.fonts.load('32px "Press Start 2P"');
 
@@ -10,6 +9,54 @@ const img={};
     img[n]=new Image();
     img[n].onerror=()=>console.log('MISSING',img[n].src);
     img[n].src='art/'+n+'.png';
+});
+
+const flagArt=[
+    '..yy............................',
+    '.yyyy...........................',
+    '.yyyy...........................',
+    '..dgddddddddddddddddddddddddd...',
+    '..dgdrrrrrrrrrrrrrrrrrrrrrrrd...',
+    '..dgdrrrrrrrrrrrrrrrrrrrrrrrd...',
+    '..dgdrrrrwwwrrwrrwwwrwwwrrrrd...',
+    '..dgdrrrrwrrrwrwrwrrrwrrrrrrd...',
+    '..dgdrrrrwwwrwwwrwwrrwwrrrrrd...',
+    '..dgdrrrrrrwrwrwrwrrrwrrrrrr....',
+    '..dgdrrrrwwwrwrwrwrrrwwwrrrr....',
+    '..dgdrrrrrrrrrrrrrrrrrrrrrrd....',
+    '..dgdrrwrwrrwrrwrwrwwwrwwwrr....',
+    '..dgdrrwrwrwrwrwrwrwrrrwrwrr....',
+    '..dgdrrwwwrwwwrwrwrwwrrwrwrrd...',
+    '..dgdrrwrwrwrwrwrwrwrrrwrwrrd...',
+    '..dgdrrwrwrwrwrrwrrwwwrwrwrrd...',
+    '..dgdrrrrrrrrrrrrrrrrrrrrrrrd...',
+    '..dgdsssssssssssssssssssssssd...',
+    '..dgddddddddddddddddddddddddd...',
+    '..dg............................',
+    '..dg............................',
+    '..dg............................',
+    '..dg............................',
+    '..dg............................',
+    '..dg............................',
+    '..dg............................',
+    '..dg............................',
+    '..dg............................',
+    '..dg............................',
+    'ddddddd.........................',
+    'bbbbbbb.........................'
+];
+const flagCol={d:'#14142a',g:'#9aa0b4',y:'#ffd23f',r:'#eb2a3f',s:'#b4192d',w:'#fffffe',b:'#4c3533'};
+const flagImg=document.createElement('canvas');
+flagImg.width=32;
+flagImg.height=32;
+const fg=flagImg.getContext('2d');
+flagArt.forEach((row,y)=>{
+    for(let x=0;x<32;x++){
+        if(row[x]!=='.'){
+            fg.fillStyle=flagCol[row[x]];
+            fg.fillRect(x,y,1,1);
+        }
+    }
 });
 
 let ac=null;
@@ -47,6 +94,16 @@ const sfx={
     hurt(){
         tone(300,60,0.3,'sawtooth',0.08);
     },
+    warn(){
+        tone(800,500,0.1,'square',0.04);
+    },
+    rumble(){
+        tone(70,40,0.25,'sawtooth',0.1);
+    },
+    crash(){
+        tone(160,30,0.9,'sawtooth',0.14);
+        tone(90,20,1.1,'square',0.1);
+    },
     win(){
         [523,659,784,1047].forEach((f,i)=>setTimeout(()=>tone(f,f,0.18,'square',0.06),i*130));
     }
@@ -61,314 +118,21 @@ addEventListener('keydown',e=>{
 addEventListener('keyup',e=>keys[e.code]=false);
 
 const GRAV=1200,SPEED=250,JUMP=-450;
-const p={x:0,y:0,vy:0,w:48,h:48,on:false,sq:0};
+const QUAKE=15;
+
+const warnBox=document.querySelector('.warn');
+const warnTitle=document.querySelector('.w1');
+const warnText=document.querySelector('.w2');
+const overStat=document.querySelector('.o-stat');
+const p={x:0,y:0,vy:0,w:48,h:48,on:false,sq:0,rot:0,face:1,spin:0,target:0};
 const clouds=[
     {n:'cloud1',x:100,y:50,s:12},
     {n:'cloud2',x:500,y:90,s:8},
     {n:'cloud3',x:800,y:30,s:15}
 ];
 
-const levels=[
-    {
-        name:'FALL UP',
-        start:{x:100,y:240},
-        plats:[{x:0,y:300,w:480},{x:720,y:150,w:288}],
-        bars:[{x:300,y:230,w:75},{x:560,y:120,w:75}],
-        spikes:[{x:330,y:262},{x:800,y:112}],
-        tramps:[{x:528,y:444}],
-        goal:{x:900,y:54},
-        coins:[{x:337,y:206},{x:597,y:96},{x:823,y:75}]
-    },
-    {
-        name:'NARROW ESCAPE',
-        start:{x:60,y:252},
-        plats:[{x:0,y:300,w:432},{x:672,y:120,w:336}],
-        bars:[{x:180,y:225,w:75},{x:530,y:105,w:75}],
-        spikes:[{x:250,y:262},{x:350,y:262},{x:800,y:82}],
-        tramps:[{x:480,y:444}],
-        goal:{x:900,y:24},
-        coins:[{x:217,y:201},{x:567,y:81},{x:823,y:45}]
-    },
-    {
-        name:'TWO PITS',
-        start:{x:60,y:252},
-        plats:[{x:0,y:300,w:288},{x:480,y:210,w:192},{x:864,y:150,w:144}],
-        bars:[{x:90,y:235,w:75}],
-        spikes:[{x:210,y:262},{x:560,y:172}],
-        tramps:[{x:312,y:444},{x:696,y:444}],
-        goal:{x:900,y:54},
-        coins:[{x:127,y:211},{x:384,y:130},{x:768,y:160}]
-    },
-    {
-        name:'KANTA ALLEY',
-        start:{x:60,y:252},
-        plats:[{x:0,y:300,w:528},{x:720,y:180,w:288}],
-        bars:[{x:590,y:130,w:75}],
-        spikes:[{x:180,y:262},{x:226,y:262},{x:360,y:262},{x:410,y:262},{x:780,y:142}],
-        tramps:[{x:552,y:444}],
-        goal:{x:900,y:84},
-        coins:[{x:203,y:215},{x:385,y:215},{x:627,y:106}]
-    },
-    {
-        name:'SKY STEPS',
-        start:{x:60,y:302},
-        plats:[{x:0,y:350,w:192},{x:384,y:250,w:96},{x:672,y:120,w:336}],
-        bars:[{x:250,y:200,w:75}],
-        spikes:[{x:780,y:82}],
-        tramps:[{x:216,y:444},{x:504,y:444}],
-        goal:{x:900,y:24},
-        coins:[{x:287,y:176},{x:432,y:226},{x:576,y:100}]
-    },
-    {
-        name:'BOUNCE BACK',
-        start:{x:60,y:252},
-        plats:[{x:0,y:300,w:240},{x:432,y:200,w:144},{x:768,y:110,w:240}],
-        bars:[{x:297,y:130,w:75}],
-        spikes:[{x:150,y:262},{x:500,y:162},{x:790,y:72}],
-        tramps:[{x:264,y:444},{x:600,y:444}],
-        goal:{x:900,y:14},
-        coins:[{x:334,y:106},{x:672,y:200},{x:860,y:86}]
-    },
-    {
-        name:'DOUBLE COMEBACK',
-        start:{x:60,y:302},
-        plats:[
-            {x:0,y:350,w:240},
-            {x:432,y:250,w:144},
-            {x:768,y:120,w:240}
-        ],
-        bars:[
-            {x:288,y:240,w:75},
-            {x:624,y:150,w:75}
-        ],
-        spikes:[
-            {x:144,y:312},
-            {x:480,y:212},
-            {x:816,y:82},
-            {x:864,y:82}
-        ],
-        tramps:[
-            {x:264,y:444},
-            {x:600,y:444}
-        ],
-        goal:{x:900,y:24},
-        coins:[
-            {x:180,y:270},
-            {x:540,y:200},
-            {x:780,y:70}
-        ]
-    },
-        
-{
-    name:'PRECISION HELL',
-    start:{x:48,y:312},
-
-    plats:[
-        {x:0,y:360,w:192},
-        {x:384,y:270,w:96},
-        {x:672,y:180,w:96},
-        {x:864,y:120,w:96}
-    ],
-
-    bars:[],
-
-    spikes:[
-        {x:120,y:322},
-        {x:384,y:232},
-        {x:672,y:142},
-        {x:720,y:142}
-    ],
-
-    tramps:[
-        {x:216,y:444},
-        {x:504,y:444}
-    ],
-
-    goal:{x:900,y:24},
-
-    coins:[
-        {x:300,y:260},
-        {x:456,y:160},
-        {x:756,y:80}
-    ]
-},
-
-    
-    {
-        name:'THE SLINGSHOT',
-        start:{x:396,y:0},
-        plats:[
-            {x:864,y:80,w:96}
-        ],
-        bars:[
-            {x:384,y:48,w:75}
-        ],
-        spikes:[
-            {x:456,y:10},
-            {x:864,y:42}
-        ],
-        tramps:[
-            {x:528,y:444}
-        ],
-        goal:{x:900,y:0},
-        coins:[
-            {x:420,y:24},
-            {x:600,y:420},
-            {x:912,y:40}
-        ]
-    },
-    {
-        name:'THE DEEP SHAFT',
-        start:{x:300,y:0},
-        plats:[
-            {x:816,y:300,w:144}
-        ],
-        bars:[
-            {x:288,y:48,w:75},
-            {x:480,y:150,w:75},
-            {x:288,y:252,w:75},
-            {x:480,y:354,w:75}
-        ],
-        spikes:[
-            {x:504,y:112},
-            {x:288,y:214},
-            {x:528,y:316},
-            {x:816,y:262}
-        ],
-        tramps:[
-            {x:624,y:444}
-        ],
-        goal:{x:900,y:204},
-        coins:[
-            {x:468,y:126},
-            {x:348,y:228},
-            {x:492,y:330}
-        ]
-    },
-
-
-    {
-        name:'THE PINCH',
-        start:{x:24,y:132},
-        plats:[
-            {x:0,y:180,w:144},
-            {x:864,y:196,w:48}
-        ],
-        bars:[
-            {x:432,y:48,w:75}
-        ],
-        spikes:[
-            {x:84,y:142},
-            {x:432,y:10},
-            {x:478,y:10},
-            {x:864,y:158}
-        ],
-        tramps:[
-            {x:150,y:444},
-            {x:690,y:444}
-        ],
-        goal:{x:900,y:100},
-        coins:[
-            {x:120,y:90},
-            {x:392,y:24},
-            {x:720,y:440}
-        ]
-    },
-
-    {
-        name:'THE NEEDLE SHAFT',
-        start:{x:693,y:0},
-        plats:[
-            {x:864,y:196,w:48}
-        ],
-        bars:[],
-        spikes:[
-            // GATE 1
-            {x:0,y:72},
-            {x:46,y:72},
-            {x:92,y:72},
-            {x:138,y:72},
-            {x:184,y:72},
-            {x:230,y:72},
-            {x:276,y:72},
-            {x:322,y:72},
-            {x:368,y:72},
-            {x:414,y:72},
-            {x:460,y:72},
-            {x:506,y:72},
-            {x:552,y:72},
-            {x:598,y:72},
-            {x:622,y:72},
-            {x:728,y:72},
-            {x:774,y:72},
-            {x:820,y:72},
-            {x:866,y:72},
-            {x:912,y:72},
-
-            // GATE 2
-            {x:0,y:222},
-            {x:46,y:222},
-            {x:92,y:222},
-            {x:138,y:222},
-            {x:184,y:222},
-            {x:230,y:222},
-            {x:276,y:222},
-            {x:322,y:222},
-            {x:368,y:222},
-            {x:414,y:222},
-            {x:460,y:222},
-            {x:506,y:222},
-            {x:552,y:222},
-            {x:572,y:222},
-            {x:678,y:222},
-            {x:724,y:222},
-            {x:770,y:222},
-            {x:816,y:222},
-            {x:862,y:222},
-            {x:908,y:222},
-
-            // GATE 3
-            {x:0,y:372},
-            {x:46,y:372},
-            {x:92,y:372},
-            {x:138,y:372},
-            {x:184,y:372},
-            {x:230,y:372},
-            {x:276,y:372},
-            {x:322,y:372},
-            {x:368,y:372},
-            {x:414,y:372},
-            {x:460,y:372},
-            {x:506,y:372},
-            {x:522,y:372},
-            {x:628,y:372},
-            {x:674,y:372},
-            {x:720,y:372},
-            {x:766,y:372},
-            {x:812,y:372},
-            {x:858,y:372},
-            {x:904,y:372},
-
-            // FINAL PLATFORM
-            {x:864,y:158}
-        ],
-        tramps:[
-            {x:528,y:444}
-        ],
-        goal:{x:900,y:100},
-        coins:[
-            {x:693,y:82},
-            {x:620,y:232},
-            {x:572,y:382}
-        ]
-    }
-
-
-
-
-];
-
 let lvl=0,start,plats,bars,spikes,tramps,goal,tops,coins,score,won;
+let safe,qt,ct,crashed,over,debris,lastSec,rumbleT;
 
 function newGame(n){
     lvl=n;
@@ -383,6 +147,15 @@ function newGame(n){
     coins=L.coins.map(c=>({...c,got:false}));
     score=0;
     won=false;
+    over=false;
+    document.body.classList.remove('dead');
+    crashed=false;
+    qt=0;
+    ct=0;
+    lastSec=QUAKE;
+    rumbleT=0;
+    debris=[];
+    safe=plats.find(r=>r.y===goal.y+96&&goal.x+36>r.x&&goal.x<r.x+r.w)||plats[plats.length-1];
     reset();
 }
 
@@ -390,11 +163,113 @@ function reset(){
     p.x=start.x;
     p.y=start.y;
     p.vy=0;
+    p.rot=0;
+    p.spin=0;
 }
 
 function die(){
     sfx.hurt();
+    if(crashed){
+        over=true;
+        overStat.textContent='LEVEL '+(lvl+1)+'  SAVED '+score+'/'+coins.length;
+        document.body.classList.add('dead');
+        return;
+    }
     reset();
+}
+
+function chunk(im,sx,sy,sw,sh,x,y,w,h,col){
+    debris.push({
+        x:x+w/2,y:y+h/2,
+        vx:(Math.random()-0.5)*300,
+        vy:-Math.random()*250,
+        rot:0,
+        vr:(Math.random()-0.5)*10,
+        wait:Math.random()*0.4,
+        w:w,h:h,im:im,sx:sx,sy:sy,sw:sw,sh:sh,col:col
+    });
+}
+
+function crumble(){
+    for(const r of plats){
+        if(r===safe)continue;
+        for(let x=r.x;x<r.x+r.w;x+=24){
+            const w=Math.min(24,r.x+r.w-x);
+            chunk(img.ground,((x-r.x)%96)/3,0,w/3,16,x,r.y,w,48);
+            for(let y=r.y+48;y<540;y+=48){
+                chunk(null,0,0,0,0,x,y,w,48,(x+y)%48===0?'#4c3533':'#3d2a28');
+            }
+        }
+    }
+
+    for(const b of bars){
+        const iw=img.bar.width;
+        for(let k=0;k<3;k++){
+            chunk(img.bar,k*iw/3,0,iw/3,img.bar.height,b.x+k*25,b.y,25,24);
+        }
+    }
+
+    for(const tp of tramps){
+        const iw=img.trampoline.width;
+        const ih=img.trampoline.height;
+        for(let i=0;i<4;i++){
+            for(let j=0;j<3;j++){
+                chunk(img.trampoline,i*iw/4,j*ih/3,iw/4,ih/3,tp.x+i*36,tp.y+j*32,36,32);
+            }
+        }
+    }
+
+    for(const c of coins){
+        if(!c.got){
+            chunk(img.coin,0,0,32,21,c.x-32,c.y-21,64,42);
+        }
+    }
+
+    plats=[safe];
+    bars=[];
+    tramps=[];
+    tops=[safe];
+}
+
+function quakeStep(dt){
+    if(!document.body.classList.contains('play'))return;
+
+    if(crashed){
+        ct+=dt;
+    }else{
+        qt+=dt;
+
+        const left=Math.ceil(QUAKE-qt);
+        if(left!==lastSec){
+            lastSec=left;
+            if(left>0)sfx.warn();
+        }
+
+        if(qt>=QUAKE){
+            crashed=true;
+            ct=0;
+            crumble();
+            sfx.crash();
+        }else if(qt>=QUAKE-7){
+            rumbleT-=dt;
+            if(rumbleT<=0){
+                rumbleT=0.25;
+                sfx.rumble();
+            }
+        }
+    }
+
+    for(const d of debris){
+        if(!crashed||d.wait>0){
+            d.wait-=dt;
+            continue;
+        }
+        d.vy+=1400*dt;
+        d.x+=d.vx*dt;
+        d.y+=d.vy*dt;
+        d.rot+=d.vr*dt;
+    }
+    debris=debris.filter(d=>d.y<760);
 }
 
 newGame(0);
@@ -402,6 +277,22 @@ newGame(0);
 function update(dt){
     const dir=((keys.ArrowRight||keys.KeyD)?1:0)-((keys.ArrowLeft||keys.KeyA)?1:0);
     p.x=Math.max(0,Math.min(912,p.x+dir*SPEED*dt));
+
+    if(dir)p.face=dir;
+
+    if(p.spin){
+        p.rot+=p.spin*dt;
+        if((p.spin>0&&p.rot>=p.target)||(p.spin<0&&p.rot<=p.target)){
+            p.rot=p.target;
+            p.spin=0;
+        }
+    }else if(dir&&p.on){
+        p.rot+=dir*SPEED*dt/(p.w/2);
+    }else if(!dir){
+        const turn=Math.PI*2;
+        const home=Math.round(p.rot/turn)*turn;
+        p.rot+=(home-p.rot)*Math.min(1,12*dt);
+    }
 
     if(dir){
         for(const r of plats){
@@ -437,17 +328,26 @@ function update(dt){
             p.vy=-Math.min(Math.max(p.vy*1.5,600),1100);
             p.sq=0.12;
             sfx.bounce();
+            const air=2*Math.abs(p.vy)/GRAV;
+            const turns=Math.max(1,Math.round(air/0.7));
+            p.target=p.rot-p.face*Math.PI*2*turns;
+            p.spin=-p.face*Math.PI*2*turns/air;
         }
     }
 
+    if(p.on&&p.spin){
+        p.rot=p.target;
+        p.spin=0;
+    }
+
     for(const s of spikes){
-        if(p.x+8<s.x+36&&p.x+40>s.x+10&&p.y+8<s.y+38&&p.y+40>s.y+14){
+        if(!crashed&&p.x+8<s.x+36&&p.x+40>s.x+10&&p.y+8<s.y+38&&p.y+40>s.y+14){
             die();
         }
     }
 
     for(const c of coins){
-        if(!c.got&&Math.hypot(p.x+24-c.x,p.y+24-c.y)<40){
+        if(!c.got&&!crashed&&Math.hypot(p.x+24-c.x,p.y+24-c.y)<40){
             c.got=true;
             score++;
             sfx.coin();
@@ -470,6 +370,16 @@ function update(dt){
 
 function draw(t){
     g.clearRect(0,0,960,540);
+
+    let shake=0;
+    if(crashed){
+        shake=Math.max(0,1-ct/1.5)*12;
+    }else if(qt>=QUAKE-7){
+        shake=1+(qt-(QUAKE-7))/7*8;
+    }
+
+    g.save();
+    g.translate(Math.round((Math.random()-0.5)*2*shake),Math.round((Math.random()-0.5)*2*shake));
 
     for(const c of clouds){
         c.x=(c.x+c.s/60)%1100;
@@ -495,38 +405,88 @@ function draw(t){
         g.drawImage(img.bar,b.x,b.y,75,24);
     }
 
+    for(const d of debris){
+        g.save();
+        g.translate(d.x,d.y);
+        g.rotate(d.rot);
+        if(d.im){
+            g.drawImage(d.im,d.sx,d.sy,d.sw,d.sh,-d.w/2,-d.h/2,d.w,d.h);
+        }else{
+            g.fillStyle=d.col;
+            g.fillRect(-d.w/2,-d.h/2,d.w,d.h);
+        }
+        g.restore();
+    }
+
     for(const s of spikes){
+        if(crashed&&ct>2.5)continue;
+
+        if(crashed){
+            g.globalAlpha=1-ct/2.5;
+        }
         g.drawImage(img.kanta,s.x,s.y,46,38);
+        g.globalAlpha=1;
+
+        if(crashed){
+            for(let i=0;i<7;i++){
+                const rise=(ct*70+i*17)%46;
+                g.fillStyle=['#ffd23f','#ff8c1a','#eb2a3f'][i%3];
+                g.fillRect(s.x+8+i*5+Math.sin(ct*12+i)*3,s.y+38-rise,8,8);
+            }
+        }
     }
 
     const f=Math.floor(t/100)%8;
 
     for(const c of coins){
-        if(!c.got){
+        if(!c.got&&!crashed){
             g.drawImage(img.coin,f*32,0,32,21,c.x-32,c.y-21,64,42);
         }
     }
 
-    g.fillStyle='#14142a';
-    g.fillRect(goal.x,goal.y,6,96);
-
-    g.fillStyle='#ffd23f';
-    g.beginPath();
-    g.moveTo(goal.x+6,goal.y);
-    g.lineTo(goal.x+6,goal.y+28);
-    g.lineTo(goal.x+36,goal.y+14);
-    g.fill();
+    g.drawImage(flagImg,goal.x-42,goal.y,96,96);
 
     const face=p.sq>0?img.ball_squash:p.on?img.ball_calm:p.vy>0?img.ball_fall:img.ball_up;
-    g.drawImage(face,p.x,p.y,p.w,p.h);
+    g.save();
+    g.translate(p.x+p.w/2,p.y+p.h/2);
+    g.rotate(p.rot);
+    g.drawImage(face,-p.w/2,-p.h/2,p.w,p.h);
+    g.restore();
+
+    g.textAlign='center';
+    g.font='8px "Press Start 2P"';
+    g.fillStyle='#10121c';
+    g.fillText('JAIMIN',p.x+p.w/2,p.y-8);
+    g.textAlign='left';
+
+    g.restore();
+
+    if(!crashed){
+        let a=0;
+        if(qt>=QUAKE-5){
+            a=Math.sin(qt*28)>0?0.38:0.12;
+        }else if(qt>=6){
+            a=0.03+0.07*(0.5+0.5*Math.sin(qt*5));
+        }
+        g.fillStyle='rgba(255,120,0,'+a.toFixed(2)+')';
+        g.fillRect(0,0,960,540);
+    }else if(ct<1.5){
+        g.fillStyle='rgba(255,120,0,'+(0.3*(1-ct/1.5)).toFixed(2)+')';
+        g.fillRect(0,0,960,540);
+    }
 
     g.font='16px "Press Start 2P"';
     g.fillStyle='#10121c';
-    g.fillText('LEVEL '+(lvl+1)+'  COINS '+score+'/'+coins.length,16,36);
+    g.fillText('LEVEL '+(lvl+1)+'  SAVED '+score+'/'+coins.length,16,36);
 
     if(muted){
         g.fillText('MUTED',16,64);
     }
+
+    warnBox.classList.toggle('on',!won&&!over);
+    warnBox.classList.toggle('hot',!crashed&&qt>=QUAKE-5);
+    warnTitle.textContent=crashed?'GET TO THE HAVEN!':'WARNING!';
+    warnText.textContent=crashed?'':'EARTHQUAKE IN '+Math.ceil(QUAKE-qt)+' SEC';
 
     if(won){
         g.fillStyle='rgba(0,0,0,0.6)';
@@ -535,10 +495,10 @@ function draw(t){
         g.fillStyle='#fffffe';
         g.textAlign='center';
         g.font='32px "Press Start 2P"';
-        g.fillText(lvl+1<levels.length?'YOU BOUNCED BACK!':'YOU FINISHED IT!',480,250);
+        g.fillText(lvl+1<levels.length?'YOU ESCAPED!':'HAVEN IS SAFE!',480,250);
 
         g.font='16px "Press Start 2P"';
-        g.fillText('COINS '+score+'/'+coins.length,480,300);
+        g.fillText('STUDENTS SAVED '+score+'/'+coins.length,480,300);
         g.fillText(lvl+1<levels.length?'N = NEXT   R = AGAIN   ESC = MENU':'R = AGAIN   ESC = MENU',480,340);
 
         g.textAlign='left';
@@ -553,10 +513,11 @@ function loop(t){
 
     p.sq=Math.max(0,p.sq-dt);
 
-    if(won&&keys.KeyR)newGame(lvl);
+    if((won||over)&&keys.KeyR)newGame(lvl);
     if(won&&keys.KeyN&&lvl+1<levels.length)newGame(lvl+1);
 
-    if(!won)update(dt);
+    if(!won&&!over)update(dt);
+    quakeStep(dt);
 
     draw(t);
     requestAnimationFrame(loop);

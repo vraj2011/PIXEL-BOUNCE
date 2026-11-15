@@ -14,17 +14,42 @@
   <img class="ball" src="art/ball_up.png">
   <h1 class="title">PIXEL BOUNCE</h1>
   <p class="sub">FALLING IS HOW YOU WIN</p>
+  <div class="story">
+    <p>JAIMIN, ORGANIZER OF HAVEN AHMEDABAD GAME JAM, FEELS THE BUILDING SHAKE. AN EARTHQUAKE IS COMING!</p>
+    <p>HELP HIM GET THE HACK CLUBBERS (STUDENT CODERS) OUT OF THE APARTMENT. EVERY COIN = A STUDENT SAVED.</p>
+    <p>REACH THE HAVEN FLAG BEFORE THE FLOOR CRUMBLES!</p>
+  </div>
   <div class="cards"></div>
   <div class="keys">ARROWS / WASD MOVE - SPACE OR W JUMPS - M = MUTE - ESC = MENU</div>
 </div>
 
 <div class="game">
-  <canvas id="c" width="960" height="540"></canvas>
+  <div class="warn">
+    <span class="w1">WARNING!</span>
+    <span class="w2"></span>
+  </div>
+
+  <div class="stage">
+    <canvas id="c" width="960" height="540"></canvas>
+
+    <div class="over">
+      <h2 class="o-title">GAME OVER</h2>
+      <p class="o-why">THE BUILDING CRUMBLED</p>
+      <p class="o-stat"></p>
+      <div class="btns">
+        <button class="btn" id="retry">TRY AGAIN (R)</button>
+        <button class="btn alt" id="tomenu">MENU (ESC)</button>
+      </div>
+    </div>
+  </div>
+
   <div class="hint">WASD / ARROWS - SPACE JUMP - M MUTE - R RESTART - ESC MENU</div>
 </div>
 
+<script src="levels.js"></script>
 <script src="main.js"></script>
 <script>
+const UNLOCK_ALL=true;
 const best=JSON.parse(localStorage.getItem('pb')||'[]');
 const box=document.querySelector('.cards');
 
@@ -43,10 +68,10 @@ const cards=document.querySelectorAll('.card');
 
 function show(){
     cards.forEach((c,i)=>{
-        const ok=i===0||best[i-1]!=null;
+        const ok=UNLOCK_ALL||i===0||best[i-1]!=null;
         c.disabled=!ok;
         c.querySelector('.name').textContent=ok?levels[i].name:'???';
-        c.querySelector('.coins').textContent=ok?'COINS '+(best[i]||0)+'/'+levels[i].coins.length:'LOCKED';
+        c.querySelector('.coins').textContent=ok?'SAVED '+(best[i]||0)+'/'+levels[i].coins.length:'LOCKED';
     });
 }
 
@@ -56,6 +81,15 @@ addEventListener('keydown',e=>{
         show();
     }
 });
+
+document.getElementById('retry').onclick=()=>{
+    newGame(lvl);
+};
+
+document.getElementById('tomenu').onclick=()=>{
+    document.body.classList.remove('play');
+    show();
+};
 
 function onWin(s){
     best[lvl]=Math.max(best[lvl]||0,s);
